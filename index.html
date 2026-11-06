@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f1e5">
+  <title>来试试你在宫斗剧中能活过几集</title>
+  <link rel="icon" href="./static/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./static/style.css">
+  <script defer src="./static/config.js"></script>
+  <script defer src="./static/story-data.js"></script>
+  <script defer src="./static/engine.js"></script>
+  <script defer src="./static/app.js"></script>
+</head>
+<body>
+  <header class="mast">
+    <div class="wrap top">
+      <a class="brand" href="./" data-act="home">
+        <img alt="" src="./static/icon.svg" width="30" height="30">宫斗生存测试
+      </a>
+      <button type="button" class="book-link" data-act="collection">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 5q5-2 9 1 4-3 9-1v14q-5-2-9 1-4-3-9-1zM12 6v14"/></svg>
+        我的结局<span id="book-count"></span>
+      </button>
+    </div>
+  </header>
+  <p id="storage-note" class="wrap storage-note" role="status" hidden></p>
+  <main id="app" class="wrap" tabindex="-1">
+    <p class="loading">正在翻开故事……</p>
+  </main>
+  <dialog id="drawer" aria-labelledby="drawer-title"></dialog>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <noscript>请在浏览器中开启 JavaScript 后进入故事。</noscript>
+</body>
+</html>
