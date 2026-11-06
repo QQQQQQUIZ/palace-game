@@ -459,3 +459,86 @@ noscript { display: block; padding: 1rem; text-align: center; color: var(--vermi
 .unplayed { margin-top: .45rem; color: var(--muted); font-size: .9rem; }
 .result-card > .link-button { margin-top: .6rem; padding-left: 0; }
 
+/* A round keeps the five stories together; the reading page stays familiar. */
+.journey-promise { max-width: 35em; margin-top: 1rem; color: var(--jade); font-size: .91rem; line-height: 1.7; }
+.resume-box .primary { margin-top: .7rem; }
+.journey-meta { display: flex; justify-content: space-between; gap: .65rem; color: var(--muted); font-size: .82rem; }
+.journey-track { display: flex; gap: .4rem; margin: .5rem 0 .75rem; }
+.journey-track i { flex: 1; height: 3px; background: var(--line-soft); }
+.journey-track .done { background: var(--jade); }
+.journey-track .current { background: var(--vermilion); }
+.migration-note { margin: .65rem 0; padding: .75rem .9rem; background: var(--jade-pale); border-left: 3px solid var(--jade); font-size: .9rem; }
+.profile-shell { width: min(100%, 48rem); margin: 2.3rem auto 3.5rem; }
+.profile-hero { padding: 2rem 2.1rem; background: #ebeedd; border: 1px solid #bac3ac; border-top: 4px solid var(--jade); }
+.profile-kicker { margin-top: 1.3rem; color: var(--muted); font-size: .9rem; }
+.profile-hero h1 { margin: .2rem 0 .7rem; color: var(--jade); font: 700 clamp(2.15rem, 6vw, 3.1rem)/1.2 var(--serif); overflow-wrap: anywhere; }
+.profile-headline { font-size: 1.12rem; line-height: 1.7; }
+.profile-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-top: 1.3rem; padding-top: 1rem; border-top: 1px solid #c9d0bc; }
+.profile-pair p { font-size: .98rem; line-height: 1.7; }
+.profile-pair b { display: block; margin-bottom: .25rem; color: var(--jade); }
+.profile-pair p:last-child b { color: var(--vermilion); }
+.scope-note { margin-top: 1rem; color: #606957; font-size: .79rem; line-height: 1.6; }
+.profile-section { margin-top: 1.15rem; padding: 1.45rem 1.8rem; border: 1px solid var(--line); background: var(--sheet); }
+.profile-section h2 { display: flex; align-items: baseline; gap: .7rem; margin: 0 0 1rem; font: 700 1.35rem/1.45 var(--serif); }
+.profile-section h2 > span { color: var(--vermilion); font: 400 .92rem Georgia, serif; }
+.profile-traits { padding: 0; margin: 0 0 1rem; list-style: none; }
+.profile-traits li + li { margin-top: .5rem; }
+.profile-traits b { color: var(--jade); margin-right: .5rem; }
+.profile-traits li, .profile-evidence li, .reality-list, .profile-advice p, .profile-contrast, .profile-strategy { font-size: .96rem; line-height: 1.75; }
+.profile-evidence { padding: 0; margin: 0; list-style: none; }
+.profile-evidence li { padding-top: .9rem; border-top: 1px solid var(--line-soft); }
+.profile-evidence li + li { margin-top: .9rem; }
+.evidence-source { color: var(--jade); font-size: .8rem; }
+.profile-evidence blockquote { margin: .45rem 0; padding: .55rem .75rem; background: #f0f0e5; border-left: 2px solid #8c9d7f; }
+.profile-evidence li > p:last-child { color: var(--muted); }
+.profile-contrast { margin-top: .9rem; padding-top: .75rem; border-top: 1px dashed var(--line); color: var(--jade); }
+.reality-scene { color: var(--jade); font-size: 1rem; font-weight: 600; }
+.reality-list { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .55rem .75rem; margin: .85rem 0 0; }
+.reality-list dt { color: var(--jade); font-weight: 700; }
+.reality-list dt:nth-of-type(2) { color: var(--vermilion); }
+.reality-list dd { margin: 0; }
+.profile-strategy { margin-top: 1rem; padding: .75rem .85rem; background: var(--jade-pale); }
+.profile-strategy b { display: block; margin-bottom: .3rem; color: var(--jade); }
+.profile-advice { list-style: none; padding: 0; margin: 0; counter-reset: advice; }
+.profile-advice li { position: relative; padding-left: 2rem; counter-increment: advice; }
+.profile-advice li::before { position: absolute; top: .1rem; left: 0; content: counter(advice); color: var(--vermilion); font: 400 1.2rem Georgia, serif; }
+.profile-advice li + li { margin-top: 1rem; }
+.profile-advice h3 { margin-bottom: .22rem; color: var(--jade); font-size: 1rem; }
+.profile-share { margin-top: 1.15rem; padding: 1.6rem 1.8rem; border: 1px solid #778970; color: #f5eddd; background: #284b3e; }
+.profile-share .eyebrow { color: #d4bd8e; font-size: .79rem; }
+.share-type { margin-top: .8rem; color: #e5cf9f; font: 700 1.4rem/1.4 var(--serif); }
+.profile-share blockquote { margin: .75rem 0 1.25rem; font: 700 clamp(1.25rem, 3vw, 1.7rem)/1.65 var(--serif); }
+.profile-share .primary { color: #294739; background: #e8d9b5; border-color: #e8d9b5; }
+.profile-share .primary:hover { color: #fffaf0; }
+.profile-share .form-note { color: #d0d6c4; font-size: .8rem; }
+.profile-footer { margin-top: 1.25rem; }
+.profile-footer .actions { margin-top: 0; }
+.profile-footer .form-note { font-size: .8rem; }
+.round-ending { padding: 1.3rem 0; border-bottom: 1px solid var(--line); }
+.round-ending .eyebrow { letter-spacing: .02em; }
+.round-ending h3 { margin-top: .6rem; font-size: 1.35rem; }
+.round-ending .scene-copy { font-size: .95rem; }
+.share-image { width: 100%; height: auto; margin-top: 1rem; border-radius: 2px; }
+.image-download { margin-top: 1rem; }
+#drawer.image-drawer { width: min(35rem, 100%); }
+@media (max-width: 780px) {
+  .journey-promise { order: 3; margin-top: .8rem; }
+  .hero-art { order: 4; }
+  .entry-form { order: 5; }
+  .profile-shell { margin-top: 1.2rem; }
+}
+@media (max-width: 520px) {
+  .profile-hero { padding: 1.25rem 1.1rem; }
+  .profile-hero > .eyebrow { font-size: .72rem; letter-spacing: .02em; }
+  .profile-kicker { margin-top: .9rem; }
+  .profile-headline { font-size: 1rem; }
+  .profile-pair { grid-template-columns: 1fr; gap: .75rem; margin-top: 1rem; }
+  .profile-pair p { font-size: .94rem; }
+  .profile-section { padding: 1.15rem 1.05rem; margin-top: .85rem; }
+  .profile-section h2 { font-size: 1.18rem; }
+  .profile-share { padding: 1.2rem 1.1rem; margin-top: .85rem; }
+  .profile-traits li, .profile-evidence li, .reality-list, .profile-advice p, .profile-contrast, .profile-strategy { font-size: .94rem; line-height: 1.7; }
+  .profile-footer .actions > * { flex-basis: 100%; }
+}
+
+

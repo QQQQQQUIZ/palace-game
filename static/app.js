@@ -14,6 +14,8 @@
   let noticeTimer;
   let drawerPage = '';
   let busy = false;
+  let shareImage = '';
+  let exporting = false;
 
   if (!engine) {
     app.innerHTML = '<section class="play-shell"><h1>故事文件还没加载好</h1><p>请刷新页面重试。</p></section>';
@@ -62,6 +64,14 @@
       if (!record || typeof record.revision !== 'string' || !record.game) {
         throw new Error('Invalid saved record');
       }
+      // Keep the original record when upgrading an older five-role collection.
+      if (record.game.version === 1) {
+        try {
+          if (!window.localStorage.getItem(saveKey + ':before-profile')) {
+            window.localStorage.setItem(saveKey + ':before-profile', raw);
+          }
+        } catch { /* A backup must not prevent the current game from opening. */ }
+      }
       return {revision: record.revision, game: engine.restore(record.game)};
     } catch {
       say('这份进度无法读取，可以重新开始。');
@@ -95,39 +105,42 @@
   }
 
   function gate(view) {
-    const entryLabel = state.unlocked ? '换个身份' : '进入故事';
     return `
       <div class="hero">
         <section class="hero-copy">
           <p class="eyebrow">宫廷互动故事</p>
           <h1 class="hero-title">来试试你在<br>宫斗剧中<br><em>能活过几集</em></h1>
-          <p class="lede">皇帝的寿宴就要开席。有人把一件事托给你，接不接，由你自己拿主意。</p>
-          <form class="entry-form" id="entry">
+          <p class="lede">走过五种宫廷身份，看看面对利益、人情和压力，你习惯怎么选，又容易在哪一步吃亏。</p>
+          <p class="journey-promise">五段故事，每段 12 次选择。完成后，领取有选择依据的综合生存画像。可以随时暂停，下次回来继续。</p>
+          ${state.unlocked ? `<div class="entry-form resume-box"><p class="form-note">${view.phase === 'profile' ? '这一轮的画像已经写好。' : `你已走到第 ${view.journey.roleNumber} / ${view.journey.totalRoles} 个身份，进度已保留。`}</p>${button(view.phase === 'profile' ? '查看我的画像 →' : '继续故事 · ' + view.role.name, 'resume')}</div>` : `<form class="entry-form" id="entry">
             <label for="entry-code">入宫验证码</label>
             <div class="code-row">
               <input id="entry-code" name="code" inputmode="numeric" maxlength="32"
                 autocomplete="off" spellcheck="false" required placeholder="输入验证码"
                 aria-describedby="entry-error">
-              <button type="submit" class="primary">${entryLabel}<span aria-hidden="true"> →</span></button>
+              <button type="submit" class="primary">进入故事<span aria-hidden="true"> →</span></button>
             </div>
             <p id="entry-error" class="form-error" role="alert" hidden></p>
-            <p class="form-note">${state.unlocked ? '再次输入，会从下一个身份开始。' : '输入收到的验证码，开始你的第一场寿宴。'}</p>
-          </form>
-          ${state.unlocked ? button('继续故事 · ' + view.role.name, 'resume', 'secondary') : ''}
+            <p class="form-note">输入收到的验证码，开始这一轮五段故事。</p>
+          </form>`}
         </section>
         <div class="hero-art">
           <img src="./static/palace.svg" alt="朱红宫门前，石桥通向青瓦重檐的宫殿">
         </div>
       </div>
       <footer class="cover-foot">
-        <span>五个身份，各有各的难处</span>
+        <span>五段经历，一份属于这轮选择的画像</span>
         <span>进度保存在当前浏览器</span>
       </footer>`;
   }
 
   function playTop(view, label) {
-    return `<div class="play-top"><span class="eyebrow">${safe(label)}</span>
-      ${view.history.length ? button('回看我的选择', 'history', 'link-button') : ''}</div>`;
+    const journey = view.journey;
+    return `<div class="journey-meta"><span>第 ${journey.roleNumber} / ${journey.totalRoles} 个身份</span><span>本轮已完成 ${journey.completedCount} 段</span></div>
+      <div class="journey-track" aria-hidden="true">${Array.from({length: journey.totalRoles}, (_, index) => `<i class="${index < journey.completedCount ? 'done' : index === journey.roleNumber - 1 ? 'current' : ''}"></i>`).join('')}</div>
+      <div class="play-top"><span class="eyebrow">${safe(label)}</span>
+      ${view.history.length ? button('回看我的选择', 'history', 'link-button') : ''}</div>
+      ${view.migrationNotice ? `<p class="migration-note" role="status">${safe(view.migrationNotice)}</p>` : ''}`;
   }
 
   function story(view) {
@@ -139,7 +152,7 @@
           <p class="eyebrow">这次你的身份是 · ${safe(role.name)}</p>
           <h1 class="scene-title">${safe(role.title)}</h1>
           <div class="scene-copy">${paragraphs(role.intro)}</div>
-          ${role.minimumChoices ? `<p class="form-note">这段故事至少有 ${safe(role.minimumChoices)} 次选择，进度会自动保存。</p>` : ''}
+          ${role.minimumChoices ? `<p class="form-note">这段故事有 ${safe(role.minimumChoices)} 次选择。按你此刻的想法选，不必猜哪一个才算通关。</p>` : ''}
           <div class="actions">${button('进入剧情 →', 'begin')}</div>
         </section></div>`;
     }
@@ -168,13 +181,54 @@
             <ol>${view.history.map(item => `<li>${safe(item.answer)}</li>`).join('')}</ol>
           </details>
           <div class="actions">
-            ${button('重玩这个身份', 'retry')}
-            ${button('换下一个身份', 'nextRole', 'secondary')}
+            ${view.journey.completedCount === view.journey.totalRoles ? button('查看我的生存画像 →', 'showProfile') : button('进入下一个身份 →', 'nextRole')}
           </div>
+          <p class="form-note">${view.journey.completedCount === view.journey.totalRoles ? '五段经历已齐。接下来看看这些选择有什么共同点。' : `这段选择已记入本轮。再完成 ${view.journey.totalRoles - view.journey.completedCount} 个身份，就能查看综合画像。`}</p>
           ${button('查看已发现的结局', 'collection', 'link-button')}
         </article></div>`;
     }
+    if (view.phase === 'profile') return profilePage(view);
     return gate(view);
+  }
+
+  function profilePage(view) {
+    const report = window.PalaceProfile.build(view.journey.records);
+    const contrastEvidence = report.evidence.find(item => report.contrast && report.contrast.includes(item.reading));
+    return `<div class="profile-shell" id="profile-report">
+      <section class="profile-hero">
+        <p class="eyebrow">五段经历 · ${view.journey.choicesCount} 次选择 · 本轮生存画像</p>
+        <p class="profile-kicker">这一轮，你更像</p>
+        <h1>${safe(report.type)}</h1>
+        <p class="profile-headline">${safe(report.headline)}</p>
+        <div class="profile-pair"><p><b>你靠什么站稳</b>${safe(report.strength)}</p><p><b>你最该留意的坑</b>${safe(report.pitfall)}</p></div>
+        <p class="scope-note">${safe(report.scopeNote)}</p>
+      </section>
+      <section class="profile-section">
+        <h2><span>01</span> 为什么这样说</h2>
+        <ul class="profile-traits">${report.traits.slice(0, 3).map(trait => `<li><b>${safe(trait.title)}</b><span>${safe(trait.text)}</span></li>`).join('')}</ul>
+        <ol class="profile-evidence">${report.evidence.slice(0, 3).map(item => `<li><p class="evidence-source">${item === contrastEvidence ? (report.contrast.startsWith('需要') ? '需要单独留意 · ' : '另一个侧面 · ') : ''}${safe(item.roleName)} · ${safe(item.scene)}</p><blockquote>你选了：${safe(item.answer)}</blockquote><p>${safe(item.reading)}</p></li>`).join('')}</ol>
+        ${report.contrast && !contrastEvidence ? `<p class="profile-contrast">${safe(report.contrast)}</p>` : ''}
+      </section>
+      <section class="profile-section">
+        <h2><span>02</span> 放到现实里看</h2>
+        <p class="reality-scene">${safe(report.reality.scene)}</p>
+        <dl class="reality-list"><dt>优势</dt><dd>${safe(report.reality.advantage)}</dd><dt>风险</dt><dd>${safe(report.reality.risk)}</dd></dl>
+        <p class="profile-strategy"><b>你的宫中生存策略</b>${safe(report.strategy)}</p>
+      </section>
+      <section class="profile-section">
+        <h2><span>03</span> 下次可以练这三件事</h2>
+        <ol class="profile-advice">${report.advice.slice(0, 3).map(item => `<li><h3>${safe(item.title)}</h3><p>${safe(item.action)}</p></li>`).join('')}</ol>
+      </section>
+      <section class="profile-share" aria-label="可截图的画像金句">
+        <p class="eyebrow">把这一句留给自己</p>
+        <p class="share-type">${safe(report.type)}</p>
+        <blockquote>${safe(report.quote)}</blockquote>
+        ${button('保存我的画像卡片', 'saveCard')}
+        <p class="form-note">卡片包含本轮判断与五个结局，可保存或长按图片。</p>
+      </section>
+      <div class="profile-footer"><div class="actions">${button('回看本轮五段结局', 'round', 'secondary')}${button('再玩一轮', 'restart')}</div>
+        <p class="form-note">再玩一轮会从第一个身份开始，生成新的画像；已发现的结局继续保留。</p></div>
+    </div>`;
   }
 
   function render() {
@@ -189,14 +243,23 @@
   function paintBook(view) {
     const history = drawerPage === 'history';
     let content;
-    if (history) {
+    let title = history ? '我做过的选择' : '我的结局';
+    drawer.classList.toggle('image-drawer', drawerPage === 'share');
+    if (drawerPage === 'share') {
+      title = '我的画像卡片';
+      content = `<p class="muted">可以长按图片保存，也可以下载到设备。</p><img class="share-image" src="${shareImage}" alt="本轮宫斗生存画像：类型、优势、风险、金句与五个结局"><a class="primary image-download" href="${shareImage}" download="我的宫斗生存画像.png">下载图片</a>`;
+    } else if (drawerPage === 'round') {
+      title = '这一轮，走过的五段故事';
+      const notes = view.journey.records.length === view.journey.totalRoles ? window.PalaceProfile.build(view.journey.records).endingNotes : [];
+      content = `<p class="muted">只记录本轮经历。集数代表剧情走向，不代表人格的好坏。</p>${view.journey.records.map(record => `<section class="round-ending"><p class="eyebrow">${safe(record.roleName)} · 第 ${safe(record.ending.episode)} 集 · ${safe(record.ending.status)}</p><h3>${safe(record.ending.title)}</h3><div class="scene-copy">${paragraphs(record.ending.text)}</div>${notes.find(note => note.roleId === record.roleId) ? `<p class="profile-strategy"><b>这一段，值得回想的地方</b>${safe(notes.find(note => note.roleId === record.roleId).reading)}</p>` : ''}<details class="recap"><summary>展开这段的 ${record.history.length} 次选择</summary><ol>${record.history.map(item => `<li>${safe(item.answer)}</li>`).join('')}</ol></details></section>`).join('')}`;
+    } else if (history) {
       content = `<ol class="history-list">${view.history.map((item, index) => `
         <li><p class="eyebrow">第 ${index + 1} 次选择</p>
           <h3>${safe(item.title)}</h3>
           <p class="selected-choice">${safe(item.letter)} · ${safe(item.answer)}</p>
         </li>`).join('')}</ol>`;
     } else {
-      content = `<p class="muted">走过的结局会记在这里。换一个选项，也许就是另一条路。</p>
+      content = `<p class="muted">这里保留所有轮次发现的结局。综合画像只使用当前一轮的选择。</p>
         <div class="ending-collection">${view.collection.map(role => `
           <section class="ending-entry">
             <h3>${safe(role.name)}</h3><p class="muted">已发现 ${role.endings.length}/${role.total} 个结局</p>
@@ -206,7 +269,7 @@
           </section>`).join('')}</div>`;
     }
     drawer.innerHTML = `<div class="drawer-inner">
-      <div class="drawer-head"><h2 id="drawer-title">${history ? '我做过的选择' : '我的结局'}</h2>
+      <div class="drawer-head"><h2 id="drawer-title">${title}</h2>
         <button type="button" class="close-button" aria-label="关闭" data-act="close">×</button>
       </div>${content}</div>`;
   }
@@ -215,6 +278,28 @@
     drawerPage = page;
     paintBook(engine.getView(state));
     if (!drawer.open) drawer.showModal();
+  }
+
+  async function saveCard() {
+    if (exporting || state.phase !== 'profile') return;
+    exporting = true;
+    const exportButton = app.querySelector('[data-act="saveCard"]');
+    if (exportButton) { exportButton.disabled = true; exportButton.textContent = '正在制作卡片…'; }
+    try {
+      const view = engine.getView(state);
+      const report = window.PalaceProfile.build(view.journey.records);
+      const exportRevision = revision;
+      const image = await window.PalaceShare.create(report, view.journey.records);
+      if (state.phase === 'profile' && revision === exportRevision) {
+        shareImage = image;
+        showBook('share');
+      }
+    } catch {
+      say('卡片暂时没有生成，可以先截图保存页面，再试一次。');
+    } finally {
+      exporting = false;
+      if (exportButton?.isConnected) { exportButton.disabled = false; exportButton.textContent = '保存我的画像卡片'; }
+    }
   }
 
   function setBusy(value) {
@@ -246,8 +331,9 @@
         case 'activate': state = engine.activate(state, value); break;
         case 'begin': state = engine.begin(state); break;
         case 'answer': state = engine.choose(state, value); break;
-        case 'retry': state = engine.retry(state); break;
         case 'nextRole': state = engine.nextRole(state); break;
+        case 'showProfile': state = engine.showProfile(state); break;
+        case 'restart': state = engine.restart(state); shareImage = ''; break;
         default: return;
       }
       save();
@@ -291,7 +377,8 @@
     event.preventDefault();
     const action = target.dataset.act;
     if (action === 'close') { closeBook(); return; }
-    if (action === 'collection' || action === 'history') { showBook(action); return; }
+    if (action === 'collection' || action === 'history' || action === 'round') { showBook(action); return; }
+    if (action === 'saveCard') { void saveCard(); return; }
     if (busy) return;
     if (action === 'home' || action === 'resume') {
       closeBook();
